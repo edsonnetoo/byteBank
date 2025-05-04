@@ -1,6 +1,7 @@
 import { Transacao } from "./Transacao.js";
 import { TipoTransacao } from "./TipoTransacao.js";
 import { GrupoTransacao } from "./GrupoTransacao.js";
+import { ResumoTransacoes } from "./ResumoTransacoes.js";
 
 let saldo: number = JSON.parse(localStorage.getItem("saldo")) || 0;
 const transacoes: Transacao[] = JSON.parse(localStorage.getItem("transacoes"), (key: string, value: string) => {
@@ -74,6 +75,50 @@ const Conta = {
             transacoes.push(novaTransacao);
             console.log(this.getGruposTransacoes());
             localStorage.setItem("transacoes",  JSON.stringify(transacoes));
+    },
+
+    resumoTransacoes(): void {
+        const listaTotalTransacoes: ResumoTransacoes[] = [];
+        const listaDeTransacoes: Transacao[] = structuredClone(transacoes);
+
+        const grupoDeposito: Transacao[] = [];
+        const grupoTransferencia: Transacao[] = [];
+        const grupoBoleto: Transacao[] = [];
+
+        for (let transacao of listaDeTransacoes) {
+            if (transacao.tipoTransacao === TipoTransacao.DEPOSITO) {
+                grupoDeposito.push(transacao);
+            }
+            if (transacao.tipoTransacao === TipoTransacao.TRANSFERENCIA) {
+                grupoTransferencia.push(transacao);
+            }
+            if (transacao.tipoTransacao === TipoTransacao.PAGAMENTO_BOLETO) {
+                grupoBoleto.push(transacao);
+            }
+        }
+
+        let valorTotalBoleto = 0;
+        let valorTotalDeposito = 0;
+        let valorTotalTransferencia = 0;
+
+        for (let boleto of grupoBoleto) {
+            valorTotalBoleto += boleto.valor;
+        }
+        for (let deposito of grupoDeposito) {
+            valorTotalDeposito += deposito.valor;
+        }
+        for (let transferencia of grupoTransferencia) {
+            valorTotalTransferencia += transferencia.valor;
+        }
+
+        listaTotalTransacoes.push({
+            totalDepositos: valorTotalDeposito,
+            totalPagamentosBoletos: valorTotalBoleto,
+            totalTransferencias: valorTotalTransferencia
+        });
+
+        console.log("Objeto esperado:",listaTotalTransacoes);
+
     }
 }
 

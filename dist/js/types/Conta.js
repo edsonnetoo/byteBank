@@ -62,6 +62,42 @@ const Conta = {
         transacoes.push(novaTransacao);
         console.log(this.getGruposTransacoes());
         localStorage.setItem("transacoes", JSON.stringify(transacoes));
+    },
+    resumoTransacoes() {
+        const listaTotalTransacoes = [];
+        const listaDeTransacoes = structuredClone(transacoes);
+        const grupoDeposito = [];
+        const grupoTransferencia = [];
+        const grupoBoleto = [];
+        for (let transacao of listaDeTransacoes) {
+            if (transacao.tipoTransacao === TipoTransacao.DEPOSITO) {
+                grupoDeposito.push(transacao);
+            }
+            if (transacao.tipoTransacao === TipoTransacao.TRANSFERENCIA) {
+                grupoTransferencia.push(transacao);
+            }
+            if (transacao.tipoTransacao === TipoTransacao.PAGAMENTO_BOLETO) {
+                grupoBoleto.push(transacao);
+            }
+        }
+        let valorTotalBoleto = 0;
+        let valorTotalDeposito = 0;
+        let valorTotalTransferencia = 0;
+        for (let boleto of grupoBoleto) {
+            valorTotalBoleto += boleto.valor;
+        }
+        for (let deposito of grupoDeposito) {
+            valorTotalDeposito += deposito.valor;
+        }
+        for (let transferencia of grupoTransferencia) {
+            valorTotalTransferencia += transferencia.valor;
+        }
+        listaTotalTransacoes.push({
+            totalDepositos: valorTotalDeposito,
+            totalPagamentosBoletos: valorTotalBoleto,
+            totalTransferencias: valorTotalTransferencia
+        });
+        console.log("Objeto esperado:", listaTotalTransacoes);
     }
 };
 export default Conta;

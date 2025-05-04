@@ -22,6 +22,7 @@ elementoFormulario.addEventListener("submit", function (event) {
             data: data,
         };
         Conta.registrarTransacao(novaTransacao);
+        Conta.resumoTransacoes();
         DataComponent.atualizar();
         SaldoComponent.atualizar();
         ExtratoComponent.atualizar();
