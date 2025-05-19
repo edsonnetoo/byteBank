@@ -1,19 +1,38 @@
 import { TipoTransacao } from "./TipoTransacao.js";
-export class Conta {
-    nome;
-    saldo = JSON.parse(localStorage.getItem('saldo')) || 0;
-    transacoes = JSON.parse(localStorage.getItem('transacoes'), (key, value) => {
-        if (key === "data") {
-            return new Date(value);
-        }
-        return value;
-    }) || [];
-    constructor(nome) {
-        this.nome = nome;
+let saldo = JSON.parse(localStorage.getItem("saldo")) || 0;
+export const transacoes = JSON.parse(localStorage.getItem("transacoes"), (key, value) => {
+    if (key == "data") {
+        return new Date(value);
     }
+    return value;
+}) || [];
+function debitar(valor) {
+    if (valor <= 0) {
+        throw new Error("O valor a ser debitado deve ser maior que zero!");
+    }
+    if (valor > saldo) {
+        throw new Error("Saldo Insuficiente!");
+    }
+    saldo -= valor;
+    localStorage.setItem("saldo", saldo.toString());
+}
+function depositar(valor) {
+    if (valor <= 0) {
+        throw new Error("O valor a ser depositado deve ser maior que zero!");
+    }
+    saldo += valor;
+    localStorage.setItem("saldo", saldo.toString());
+}
+const Conta = {
+    getSaldo() {
+        return saldo;
+    },
+    getDataDeAcesso() {
+        return new Date;
+    },
     getGruposTransacoes() {
         const gruposTransacoes = [];
-        const listaTransacoes = structuredClone(this.transacoes); //Cria uma copia de transacoes e retorna a lista pra ser usada por fora
+        const listaTransacoes = structuredClone(transacoes); //Cria uma copia de transacoes e retorna a lista pra ser usada por fora
         const transacoesOrdenadas = listaTransacoes.sort((t1, t2) => t2.data.getTime() - t1.data.getTime()); // Compara as datas das transferencias e ordena pela mais recente
         let labelAtualGrupoTransacao = "";
         for (let transacao of transacoesOrdenadas) {
@@ -28,48 +47,25 @@ export class Conta {
             gruposTransacoes.at(-1).transacoes.push(transacao);
         }
         return gruposTransacoes;
-    }
-    getSaldo() {
-        return this.saldo;
-    }
-    getDataDeAcesso() {
-        return new Date();
-    }
-    debitar(valor) {
-        if (valor <= 0) {
-            throw new Error("O valor a ser debitado deve ser maior que zero!");
-        }
-        if (valor > this.saldo) {
-            throw new Error("Saldo Insuficiente!");
-        }
-        this.saldo -= valor;
-        localStorage.setItem("saldo", this.saldo.toString());
-    }
-    depositar(valor) {
-        if (valor <= 0) {
-            throw new Error("O valor a ser depositado deve ser maior que zero!");
-        }
-        this.saldo += valor;
-        localStorage.setItem("saldo", this.saldo.toString());
-    }
+    },
     registrarTransacao(novaTransacao) {
         if (novaTransacao.tipoTransacao == TipoTransacao.DEPOSITO) {
-            this.depositar(novaTransacao.valor);
+            depositar(novaTransacao.valor);
         }
         else if (novaTransacao.tipoTransacao == TipoTransacao.TRANSFERENCIA || novaTransacao.tipoTransacao == TipoTransacao.PAGAMENTO_BOLETO) {
-            this.debitar(novaTransacao.valor);
+            debitar(novaTransacao.valor);
             novaTransacao.valor *= -1;
         }
         else {
             throw new Error("Tipo de transação é inválido!");
         }
-        this.transacoes.push(novaTransacao);
+        transacoes.push(novaTransacao);
         console.log(this.getGruposTransacoes());
-        localStorage.setItem("transacoes", JSON.stringify(this.transacoes));
-    }
+        localStorage.setItem("transacoes", JSON.stringify(transacoes));
+    },
     resumoTransacoes() {
         const listaTotalTransacoes = [];
-        const listaDeTransacoes = structuredClone(this.transacoes);
+        const listaDeTransacoes = structuredClone(transacoes);
         const grupoDeposito = [];
         const grupoTransferencia = [];
         const grupoBoleto = [];
@@ -103,6 +99,5 @@ export class Conta {
         });
         console.log("Objeto esperado:", listaTotalTransacoes);
     }
-}
-const conta = new Conta("Joana da Silva Oliv");
-export default conta;
+};
+export default Conta;
